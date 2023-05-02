@@ -109,6 +109,7 @@ The `update` function is used to update the signal store state. It accepts a seq
 Examples:
 
 ```ts
+type CallState = 'init' | 'loading' | 'loaded';
 type UsersState = { users: User[]; callState: CallState };
 
 const UsersStore = createSignalStore(
@@ -116,10 +117,10 @@ const UsersStore = createSignalStore(
 );
 const usersStore = inject(UsersStore);
 
-// passing partial state object:
+// passing partial state object (replace all array):
 usersStore.update({ users: ['u1', 'u2'] });
 
-// passing updater function:
+// passing updater function (add item to array):
 usersStore.update((state) => ({
   users: [...state.users, 'u3'],
   callState: 'loaded',
@@ -131,10 +132,9 @@ usersStore.update((state) => ({ users: [...state.users, 'u4'] }), {
 });
 
 // We can also define reusable and tree-shakeable updater functions
-// that can be used in any signal store:
-function removeInactiveUsers(): (state: { users: User[] }) => {
-  users: User[];
-} {
+// that can be used in any signal store (like factories):
+function removeInactiveUsers(): (state: { users: User[] }) => { users: User[]; } 
+{
   return (state) => ({ users: state.users.filter((user) => user.isActive) });
 }
 
@@ -180,9 +180,9 @@ const UsersStore = createSignalStore(
   // factory argument
   withUpdaters(({ update, users }) => ({
     addUsers: (newUsers: User[]) => {
-      update((state) => ({ users: [...state.users, newUsers] }));
+      update((state) => ({ users: [...state.users, ...newUsers] }));
       // or:
-      // update({ users: [...users(), newUsers] })
+      // update({ users: [...users(), ...newUsers] })
     },
   })),
   withEffects(({ addUsers }) => {
@@ -314,6 +314,8 @@ For example, we can define `withCallState` feature in the following way:
 ```ts
 import { signal, computed } from '@angular/core';
 
+type CallState = 'init' | 'loading' | 'loaded' | Error;
+
 function withCallState(): () => {
   state: { callState: Signal<CallState> };
   computed: {
@@ -331,7 +333,7 @@ function withCallState(): () => {
         loading: computed(() => callState() === 'loading'),
         loaded: computed(() => callState() === 'loaded'),
         error: computed(() =>
-          typeof callState() === 'object' ? callState().error : null
+          typeof callState() === 'object' ? callState()?.error : null
         ),
       },
     };
@@ -378,7 +380,7 @@ Example:
 ```ts
 import { rxEffect } from '@ngrx/signals';
 import { withEntities, setAll, deleteOne } from '@ngrx/signals/entity';
-import { withCallState, setLoading, setLoaded } from './call-state-feature';
+import { withCallState, setLoaded } from './call-state-feature';
 
 const UsersStore = createSignalStore(
   withEntities<User>(),
@@ -389,7 +391,7 @@ const UsersStore = createSignalStore(
     return {
       loadUsers: rxEffect(
         pipe(
-          tap(() => update(setLoading())),
+          tap(() => update({ callState: 'loading' })),
           exhaustMap(() => usersService.getAll()),
           tap((users) => update(setAll(users), setLoaded()))
         )
