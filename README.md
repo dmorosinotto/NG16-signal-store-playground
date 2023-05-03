@@ -1,3 +1,8 @@
+#NG16 EXPERIMENTS TO USE SIGNALS
+
+- How to use Signal with _OLD_ [NgRxStore RFC](https://github.com/ngrx/platform/discussions/3843) -> consume Observables with toSignal() without | async or *ngrxLet on tamplate -> interop `store.selectSignal(selector)` 
+- **NEW WAY** Store based on Signal this [NgRxSignalStore RFC](https://github.com/ngrx/platform/discussions/3796) 
+
 ## NgRx SignalStore
 
 Main goals:

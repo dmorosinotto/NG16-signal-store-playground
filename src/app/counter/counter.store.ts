@@ -9,11 +9,11 @@ export class CounterStore extends signalStore(withState({ count: 0 })) {
     console.log('count changed', this.count());
   });
 
-  increment(): void {
+  increment = () => {
     this.update({ count: this.count() + 1 });
-  }
+  };
 
-  decrement(): void {
+  decrement = () => {
     this.update({ count: this.count() - 1 });
-  }
+  };
 }
